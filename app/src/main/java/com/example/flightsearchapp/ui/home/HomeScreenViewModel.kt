@@ -57,7 +57,7 @@ class FlightSearchViewModel(
         isAirportSelected = true
     }
 
-    fun selectAirport(airport: Airport) {
+    private fun selectAirport(airport: Airport) {
         _selectedAirportState.value = SelectedAirportState(airport)
         viewModelScope.launch {
             airportRepository.getDestinations(airport.name)
@@ -67,6 +67,11 @@ class FlightSearchViewModel(
         airportSelected()
     }
 
+    fun deselectAirport() {
+        _selectedAirportState.value = null
+        isAirportSelected = false
+        setSearchTerms("")
+    }
     private fun addFavorite(departure: Airport, destination: Airport) {
         viewModelScope.launch {
             airportRepository.insert(
@@ -78,6 +83,7 @@ class FlightSearchViewModel(
     fun airportClicked(airport: Airport) {
         if (isAirportSelected) {
             addFavorite(airport, _selectedAirportState.value?.airport!!)
+            deselectAirport()
         } else {
             selectAirport(airport)
         }
@@ -100,6 +106,11 @@ class FlightSearchViewModel(
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = FavoritesUiState()
         )
+    fun deleteFavorite(favorite: Favorite) {
+        viewModelScope.launch {
+            airportRepository.delete(favorite.departureCode, favorite.destinationCode)
+        }
+    }
 }
 
 data class SearchUiState(
