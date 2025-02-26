@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.data
+package com.example.flightsearchapp.data.room
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 interface AirportDao {
     @Query("SELECT * FROM airport WHERE name LIKE '%' || :name || '%' ORDER BY passengers DESC")
     fun getAirports(name: String): Flow<List<Airport>>
+
+    @Query("SELECT * FROM airport WHERE NOT name = :name ORDER BY passengers DESC")
+    fun getDestinations(name: String): Flow<List<Airport>>
 
     @Insert
     suspend fun insert(favorite: Favorite)

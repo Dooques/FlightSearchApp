@@ -1,17 +1,14 @@
 package com.example.flightsearchapp.repository
 
-import android.util.Log
-import com.example.flightsearchapp.data.Airport
-import com.example.flightsearchapp.data.AirportDao
-import com.example.flightsearchapp.data.Favorite
-import com.example.flightsearchapp.ui.home.AirportsUiState
-import kotlinx.coroutines.coroutineScope
+import com.example.flightsearchapp.data.room.Airport
+import com.example.flightsearchapp.data.room.AirportDao
+import com.example.flightsearchapp.data.room.Favorite
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 
 interface AirportRepository {
     fun getAirports(name: String): Flow<List<Airport>>
+
+    fun getDestinations(name: String): Flow<List<Airport>>
 
     suspend fun insert(favorite: Favorite)
 
@@ -25,6 +22,9 @@ class OfflineRepository(
 ): AirportRepository {
     override fun getAirports(name: String): Flow<List<Airport>> =
         airportDao.getAirports(name)
+
+    override fun getDestinations(name: String): Flow<List<Airport>> =
+        airportDao.getDestinations(name)
 
     override fun getFavorites(): Flow<List<Favorite>> =
         airportDao.getFavorites()

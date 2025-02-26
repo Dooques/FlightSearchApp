@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.data
+package com.example.flightsearchapp.data.room
 
 import android.content.Context
 import androidx.room.Database

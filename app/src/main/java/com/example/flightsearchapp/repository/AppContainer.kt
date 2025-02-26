@@ -1,7 +1,7 @@
 package com.example.flightsearchapp.repository
 
 import android.content.Context
-import com.example.flightsearchapp.data.AirportDatabase
+import com.example.flightsearchapp.data.room.AirportDatabase
 
 interface AppContainer {
     val airportRepository: AirportRepository

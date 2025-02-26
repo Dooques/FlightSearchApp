@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.data
+package com.example.flightsearchapp.data.room
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -16,7 +16,7 @@ data class Airport(
 
 @Entity(tableName = "favorite")
 data class Favorite(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     val id: Int,
     @ColumnInfo(name = "departure_code")
     val departureCode: String,

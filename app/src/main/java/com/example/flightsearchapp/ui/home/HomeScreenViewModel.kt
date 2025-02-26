@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.flightsearchapp.data.Airport
-import com.example.flightsearchapp.data.Favorite
+import com.example.flightsearchapp.data.room.Airport
+import com.example.flightsearchapp.data.room.Favorite
 import com.example.flightsearchapp.flightSearchApplication
 import com.example.flightsearchapp.repository.AirportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,39 +34,67 @@ class FlightSearchViewModel(
     }
 
     private val _searchUiState = MutableStateFlow(SearchUiState(""))
-
     val searchUiState: StateFlow<SearchUiState> = _searchUiState.asStateFlow()
 
     fun setSearchTerms(search: String) {
-        _searchUiState.update { currentState ->
-            currentState.copy(search = search)
-        }
+        _searchUiState.update { currentState -> currentState.copy(search = search) }
         updateAirportList()
     }
 
     private val _airportsUiState = MutableStateFlow(AirportsUiState(listOf()))
-
     val airportsUiState: StateFlow<AirportsUiState> = _airportsUiState.asStateFlow()
+
+    private val _selectedAirportState = MutableStateFlow<SelectedAirportState?>(null)
+    val selectedAirportState = _selectedAirportState.asStateFlow()
 
     init {
         updateAirportList()
     }
 
+    var isAirportSelected = false
+
+    private fun airportSelected() {
+        isAirportSelected = true
+    }
+
+    fun selectAirport(airport: Airport) {
+        _selectedAirportState.value = SelectedAirportState(airport)
+        viewModelScope.launch {
+            airportRepository.getDestinations(airport.name)
+                .map { AirportsUiState(it) }
+                .collect { _airportsUiState.value = it }
+        }
+        airportSelected()
+    }
+
+    private fun addFavorite(departure: Airport, destination: Airport) {
+        viewModelScope.launch {
+            airportRepository.insert(
+                Favorite(0, departure.iataCode, destination.iataCode)
+            )
+        }
+    }
+
+    fun airportClicked(airport: Airport) {
+        if (isAirportSelected) {
+            addFavorite(airport, _selectedAirportState.value?.airport!!)
+        } else {
+            selectAirport(airport)
+        }
+    }
+
     private fun updateAirportList() {
         viewModelScope.launch {
             searchUiState.collect { searchUiState ->
-                airportRepository.getAirports(searchUiState.search).map {
-                    AirportsUiState(it)
-                }.collect {
-                    _airportsUiState.value = it
-                }
-
+                airportRepository.getAirports(searchUiState.search)
+                    .map { AirportsUiState(it) }
+                    .collect { _airportsUiState.value = it }
             }
         }
     }
 
-
-    fun getFavorites() = airportRepository.getFavorites().map { FavoritesUiState(it) }
+    fun getFavorites() = airportRepository.getFavorites()
+        .map { FavoritesUiState(it) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
@@ -76,6 +104,10 @@ class FlightSearchViewModel(
 
 data class SearchUiState(
     val search: String
+)
+
+data class SelectedAirportState(
+    val airport: Airport? = null
 )
 
 data class AirportsUiState(
