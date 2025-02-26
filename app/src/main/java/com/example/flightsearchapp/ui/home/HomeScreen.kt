@@ -1,5 +1,6 @@
 package com.example.flightsearchapp.ui.home
 
+import android.content.res.Resources
 import android.text.Layout
 import android.util.Log
 import androidx.compose.foundation.background
@@ -22,6 +23,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,8 +42,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.flightsearchapp.R
 import com.example.flightsearchapp.data.room.Airport
 import com.example.flightsearchapp.data.room.Favorite
+import com.example.flightsearchapp.ui.theme.FlightSearchAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,9 +68,7 @@ fun HomeScreen(
 
         Surface(modifier = Modifier.padding(it)) {
             Column {
-                SearchField(
-                    viewModel = viewModel
-                )
+                SearchField(viewModel = viewModel)
                 if (searchTerm.search.isNotEmpty()) {
                     if (viewModel.isAirportSelected && selectedAirport?.airport != null) {
                         AirportElement(
@@ -104,7 +106,15 @@ fun SearchField(
         },
         maxLines = 1,
         placeholder = { Text("Search for an airport...") },
-        trailingIcon = { Icon(imageVector = Icons.Default.Close, contentDescription = "Clear Search") },
+        trailingIcon = {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Clear Search",
+                modifier = modifier.clickable {
+                    viewModel.setSearchTerms("")
+                    viewModel.deselectAirport()
+                }
+            ) },
         modifier = modifier.fillMaxWidth(),
     )
 }
@@ -116,8 +126,16 @@ fun AirportElement(
     highlighted: Boolean,
     viewModel: FlightSearchViewModel
 ) {
-    val color = if (highlighted) Color.Gray.copy(alpha = 0.15f) else Color.White
-    val padding = if (highlighted) modifier.padding(start = 64.dp, end = 32.dp) else modifier.padding(start = 64.dp, end = 16.dp)
+    val color =
+        if (highlighted)
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        else
+            MaterialTheme.colorScheme.background
+    val padding =
+        if (highlighted)
+            modifier.padding(start = 64.dp, end = 32.dp)
+        else
+            modifier.padding(start = 64.dp, end = 16.dp)
     val airportSelected = viewModel.isAirportSelected
     Column(
         verticalArrangement = Arrangement.Center,
@@ -194,7 +212,7 @@ fun FavoritesList(
     viewModel: FlightSearchViewModel
 ) {
     Column(
-        modifier.background(Color.Gray.copy(alpha = 0.15f))
+        modifier.background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -236,5 +254,7 @@ fun FavoritesList(
 @Composable
 @Preview("SearchScreenPreview")
 fun SearchScreenPreview() {
-    HomeScreen()
+    FlightSearchAppTheme {
+        HomeScreen()
+    }
 }

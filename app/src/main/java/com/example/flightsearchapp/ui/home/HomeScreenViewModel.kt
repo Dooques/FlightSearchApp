@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.flightsearchapp.data.preferences.PreferencesRepository
 import com.example.flightsearchapp.data.room.Airport
 import com.example.flightsearchapp.data.room.Favorite
 import com.example.flightsearchapp.flightSearchApplication
 import com.example.flightsearchapp.repository.AirportRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +21,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class FlightSearchViewModel(
-    private val airportRepository: AirportRepository
+    private val airportRepository: AirportRepository,
+    private val preferencesRepository: PreferencesRepository
 ): ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 FlightSearchViewModel(
-                    flightSearchApplication().container.airportRepository
+                    airportRepository = flightSearchApplication().container.airportRepository,
+                    preferencesRepository = flightSearchApplication().preferencesRepository
                 )
             }
         }
@@ -39,7 +43,25 @@ class FlightSearchViewModel(
     fun setSearchTerms(search: String) {
         _searchUiState.update { currentState -> currentState.copy(search = search) }
         updateAirportList()
+        saveLastSearch()
     }
+
+    private fun getLastSearchState() =
+        viewModelScope.launch {
+            preferencesRepository.lastSearch
+                .map { SearchUiState(it) }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(TIME_MILLIS),
+                    initialValue = SearchUiState("")
+                )
+                .collect { _searchUiState.value = it }
+        }
+
+    private fun saveLastSearch() =
+        viewModelScope.launch {
+            preferencesRepository.saveLastSearch(_searchUiState.value.search)
+        }
 
     private val _airportsUiState = MutableStateFlow(AirportsUiState(listOf()))
     val airportsUiState: StateFlow<AirportsUiState> = _airportsUiState.asStateFlow()
@@ -48,7 +70,11 @@ class FlightSearchViewModel(
     val selectedAirportState = _selectedAirportState.asStateFlow()
 
     init {
-        updateAirportList()
+        viewModelScope.launch {
+            getLastSearchState()
+            delay(500L)
+            updateAirportList()
+        }
     }
 
     var isAirportSelected = false

@@ -53,10 +53,15 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.core.ktx)
 
+    // Room
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+
+    // Datastore
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.core.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
