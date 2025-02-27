@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AirportDao {
-    @Query("SELECT * FROM airport WHERE name LIKE '%' || :name || '%' ORDER BY passengers DESC")
+    @Query("SELECT * FROM airport WHERE name LIKE '%' || :name || '%' OR iata_code LIKE '%' || :name || '%' ORDER BY passengers DESC")
     fun getAirports(name: String): Flow<List<Airport>>
 
     @Query("SELECT * FROM airport WHERE NOT name = :name ORDER BY passengers DESC")
